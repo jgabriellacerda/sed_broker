@@ -1,0 +1,51 @@
+version: '3.0'
+services:
+  rabbitmq:
+    image: rabbitmq:3.8.2-management
+    container_name: rabbitmq
+    ports:
+      - 8080:15672
+      - 5671:5671
+      - 5672:5672
+      - 25672:25672
+    environment:
+      - RABBITMQ_DEFAULT_USER=dam
+      - RABBITMQ_DEFAULT_PASS=password
+    networks:
+      - station_bus
+    restart: unless-stopped
+  cm:
+    container_name: cm
+    build:
+      context: .
+    volumes:
+      - "./:/acquisition_module"
+    networks:
+      - process_bus
+      - station_bus
+    restart: unless-stopped
+    privileged: true
+    depends_on:
+      - rabbitmq
+  thirdlayer:
+    container_name: thirdlayer
+    build:
+      context: ./consumer
+    volumes:
+      - "./consumer/:/consumer_module"
+    networks:
+      - station_bus
+    restart: unless-stopped
+    privileged: TRUE
+    depends_on:
+      - rabbitmq
+      - cm
+
+
+networks:
+  process_bus:
+    driver: macvlan
+    driver_opts:
+      parent: enp2s0f1
+  station_bus:
+    driver: bridge
