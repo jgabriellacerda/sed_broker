@@ -1,8 +1,8 @@
 #include <consumer.h>
 #include <string>
 #include <iostream>
-#include <fstream>
 #include <sstream>
+#include <fstream>
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
@@ -11,122 +11,116 @@
 #include <string>
 #include <json.hpp>
 
-#define NAMOSTRAS 1000
-
-//colocar número de pacotes -1
-#define BATCHSIZE 49
-
 using namespace std;
-using namespace AmqpClient;
+// using namespace AmqpClient;
 using json = nlohmann::json;
 
-Consumer::Consumer(string host, int port, string username, string password, string queue_name)
+MessageConsumer::MessageConsumer(BrokerConsumer &consumer) : consumer(consumer) {}
+
+// consumir dados da fila
+void MessageConsumer::dataConsumer()
 {
+  std::ofstream times_file;
+  long delta_time;
+  long times_buffer[BUFFERSIZE];
+  // json j_message;
+  int n = 0;
 
-  this->setAmqpParameters(host, port, username, password, queue_name);
-  this->amqpConnect();
-}
-
-void Consumer::setAmqpParameters(string host, int port, string username, string password, string queue_name)
-{
-  this->amqp_host = host;
-  this->amqp_port = port;
-  this->amqp_username = username;
-  this->amqp_password = password;
-  this->queue_name = queue_name;
-
-}
-
-void Consumer::amqpConnect()
-{
+  bool try_consume = true;
   int num_attempts = 20;
-  while(num_attempts--)
+  bool write_buffer = true;
+  bool write_file = false;
+  // while (try_consume)
+  // {
+  try
   {
-    try
+    do
     {
-      this->connection = AmqpClient::Channel::Create(this->amqp_host, this->amqp_port, this->amqp_username, this->amqp_password);
-      this->connection->DeclareQueue(this->queue_name, false, false, false, true);
-      this->connection->BindQueue(this->queue_name,"process_bus_data","sampled_values");
-      this->consumer_tag = this->connection->BasicConsume(this->queue_name,"");
 
+      this->message_payload = this->consumer.listen();
 
-      cout<<"Conexão com RabbitMQ realizada com sucesso."<<endl;
+      // amostrar aqui!
+      this->consumertimestamp = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+      this->message_json = json::parse(this->message_payload);
+
+      from_json(this->message_json, this->data);
+
+      delta_time = (this->consumertimestamp - data.arrivetimestamp_producer);
+      // long diff1 = (this->consumertimestamp - data.arrivetimestampfirst);
+      // long diff2= (this->consumertimestamp - data.arrivetimestamplast);
+
+      // cout<< data.arrivetimestamp << "   " << this->consumertimestamp<<endl;}
+      if (write_buffer)
+      {
+        if (n < BUFFERSIZE)
+        {
+          times_buffer[n] = delta_time;
+          n++;
+        }
+        else
+        {
+          n = 0;
+          write_buffer = false;
+          write_file = true;
+        }
+      }
+      else if (write_file)
+      {
+        cout << "Writing file..." << endl;
+        times_file.open("data/times_database/" + this->consumer.broker_name + "_times_" + to_string(consumertimestamp) + ".txt");
+        for (int p = 0; p < BUFFERSIZE; p++)
+        {
+          times_file << times_buffer[p] << endl;
+          // cout << times_buffer[p] << endl;
+        }
+
+        cout << "FIM" << endl;
+        times_file.close();
+
+        write_buffer = true;
+        write_file = false;
+      }
+      else
+      {
+        cout << delta_time << endl;
+      }
+
     }
-    catch(exception& e)
+    // cout<< data.sv_id<< endl;}
+    while (try_consume);
+  }
+  catch (exception &e)
+  {
+    num_attempts--;
+    if (num_attempts == 0)
     {
-      cout<<"Erro na conexão com o RabbitMQ:"<< e.what()<<" Tentativas restantes: "<<num_attempts<<endl;
+      try_consume = false;
+      cout << "Não foi possível consumir:" << e.what() << "." << endl;
+    }
+    else
+    {
+      cout << "Erro no consumo do broker:" << e.what() << ". Tentativas restantes: " << num_attempts << endl;
       std::this_thread::sleep_for(std::chrono::seconds(1));
     }
   }
-}
 
-void Consumer::dataConsumer(){
-  int num_attempts = 20;
-    try
-    {
-        ofstream myfile;
-        int h=0;
-        string amostras[NAMOSTRAS];
-        int temposcamada2[NAMOSTRAS];
-        int consumertimestampvector[NAMOSTRAS];
-        int times1layer[NAMOSTRAS];
-      do{
-      Envelope::ptr_t envelope = this->connection->BasicConsumeMessage(consumer_tag);
-      //amostrar
-      consumertimestampvector[h]= std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-      BasicMessage::ptr_t bodyBasicMessage=envelope->Message();
-
-      this->it=bodyBasicMessage->Body();
-      amostras[h]=this->it;
-      h++;
-
-    } while (h<NAMOSTRAS);
-
-      for(int z=0;z<NAMOSTRAS;z++){
-
-          this->messageBody= json::parse(amostras[z]);
-
-          from_json(this->messageBody,this->data);
-          long diff1= (consumertimestampvector[z] - data.timedataSenderlast);
-
-          long diff2= (data.timedataSenderlast-data.arrivetimestampfirst);
-
-          //times1layer[h]= data.time1layer;
-          times1layer[z]= diff2;
-          temposcamada2[z]=diff1;
-    }
-
-
-    myfile.open("tamanho1000.txt");
-    for(int p=0;p<NAMOSTRAS;p++){
-    myfile<<temposcamada2[p]<<" "<<times1layer[p]<<endl;
-    }
-
-
-
-    cout<<endl<<"FIM"<<endl;
-    myfile.close();}
-
-
-
-      catch(exception& e)
-      {
-        cout<<"Erro no consumo RabbitMQ:"<< e.what()<<" Tentativas restantes: "<<num_attempts<<endl;
-        std::this_thread::sleep_for(std::chrono::seconds(1));
-      }
-
-
+  times_file.open("data/" + this->consumer.broker_name + "_times.txt");
+  for (int p = 0; p < BUFFERSIZE; p++)
+  {
+    times_file << times_buffer[p] << endl;
+    cout << times_buffer[p] << endl;
   }
 
+  cout << "\nFIM\n";
+  times_file.close();
+}
 
-//pegar informações json e transformar para a struct
-void Consumer::from_json(const json& j, SVData& p) {
-        j[0].at("arrivetimestamp").get_to(p.arrivetimestampfirst);
-        j[BATCHSIZE].at("arrivetimestamp").get_to(p.arrivetimestamplast);
-
-        //j[2].at("time1layer").get_to(p.time1layer);
-
-        j[0].at("timedataSender").get_to(p.timedataSenderfirst);
-        j[BATCHSIZE].at("timedataSender").get_to(p.timedataSenderlast);
-
-    }
+// pegar informações json e transformar para a struct
+void MessageConsumer::from_json(const json &j, SVData &p)
+{
+  j[0].at("arrivetimestamp_producer").get_to(p.arrivetimestamp_producer);
+  // j[2].at("arrivetimestamp").get_to(p.arrivetimestamplast);
+  // j[0].at("timestamp").get_to(p.timestamp);
+  j[0].at("status").get_to(p.status);
+  j[0].at("sv_id").get_to(p.sv_id);
+}

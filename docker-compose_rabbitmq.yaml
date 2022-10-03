@@ -1,0 +1,59 @@
+version: '2'
+
+networks:
+  kafka-net:
+    driver: bridge
+  process_bus:
+    driver: macvlan
+    driver_opts:
+      parent: wlp1s0
+  station_bus:
+    driver: bridge
+
+services:
+  rabbitmq:
+    image: rabbitmq:3.8.2-management
+    container_name: rabbitmq
+    ports:
+      - 8080:15672
+      - 5671:5671
+      - 5672:5672
+      - 25672:25672
+    environment:
+      - RABBITMQ_DEFAULT_USER=dam
+      - RABBITMQ_DEFAULT_PASS=password
+    networks:
+      - station_bus
+    restart: unless-stopped
+
+  cm:
+    container_name: cm
+    build:
+      context: ./producer
+    volumes:
+      - "./producer:/acquisition_module"
+      - "./libs:/acquisition_module/libs"
+    networks:
+      - process_bus
+      - station_bus
+      - kafka-net
+    restart: unless-stopped
+    privileged: true
+    depends_on:
+      - rabbitmq
+
+  thirdlayer:
+    container_name: thirdlayer
+    build:
+      context: ./consumer
+    volumes:
+      - "./consumer/:/consumer_module"
+      - "./libs:/consumer_module/libs"
+    networks:
+      - station_bus
+      - kafka-net
+    restart: unless-stopped
+    privileged: TRUE
+    depends_on:
+      - rabbitmq
+      - cm

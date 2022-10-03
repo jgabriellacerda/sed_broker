@@ -15,11 +15,9 @@ struct SVData
 	string sv_id;
 	long timestamp;
 	bool status;
-	long arrivetimestamp;
-	long time1layer;
-	long timedataSender ;
-	long timeParser;
-
+	long arrivetimestamp_producer;
+	long arrivetimestamp_consumer;
+	// long long timefirstlayer;
 };
 
 #endif

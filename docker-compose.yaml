@@ -1,51 +1,77 @@
-version: '3.0'
+version: '2'
+
+networks:
+  kafka-net:
+    driver: bridge
+  process_bus:
+    driver: macvlan
+    driver_opts:
+      parent: wlp1s0
+  station_bus:
+    driver: bridge
+
 services:
-  rabbitmq:
-    image: rabbitmq:3.8.2-management
-    container_name: rabbitmq
-    ports:
-      - 8080:15672
-      - 5671:5671
-      - 5672:5672
-      - 25672:25672
-    environment:
-      - RABBITMQ_DEFAULT_USER=dam
-      - RABBITMQ_DEFAULT_PASS=password
+  zookeeper-server:
+    image: 'bitnami/zookeeper:latest'
     networks:
-      - station_bus
-    restart: unless-stopped
+      - kafka-net
+    ports:
+      - '2181:2181'
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+  kafka-server1:
+    image: 'bitnami/kafka:latest'
+    networks:
+      - kafka-net
+    ports:
+      - '9092:9092'
+    environment:
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper-server:2181
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka-server1:9092
+      - ALLOW_PLAINTEXT_LISTENER=yes
+    depends_on:
+      - zookeeper-server
+  #kafka-server2:
+  #  image: 'bitnami/kafka:latest'
+  #  networks:
+  #    - kafka-net
+  #  ports:
+  #    - '9093:9092'
+  #  environment:
+  #    - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper-server:2181
+  #    - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://localhost:9093
+  #    - ALLOW_PLAINTEXT_LISTENER=yes
+  #  depends_on:
+  #    - zookeeper-server
+
   cm:
     container_name: cm
     build:
-      context: .
+      context: ./producer
     volumes:
-      - "./:/acquisition_module"
+      - "./producer:/acquisition_module"
+      - "./libs:/acquisition_module/libs"
     networks:
       - process_bus
       - station_bus
+      - kafka-net
     restart: unless-stopped
     privileged: true
     depends_on:
-      - rabbitmq
+      - kafka-server1
+
   thirdlayer:
     container_name: thirdlayer
     build:
       context: ./consumer
     volumes:
       - "./consumer/:/consumer_module"
+      - "./libs:/consumer_module/libs"
     networks:
       - station_bus
+      - kafka-net
     restart: unless-stopped
     privileged: TRUE
     depends_on:
-      - rabbitmq
+      - kafka-server1
       - cm
-
-
-networks:
-  process_bus:
-    driver: macvlan
-    driver_opts:
-      parent: enp2s0f1
-  station_bus:
-    driver: bridge
