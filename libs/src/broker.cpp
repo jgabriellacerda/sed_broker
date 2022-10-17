@@ -47,20 +47,7 @@ string KafkaConsumer::listen()
             if (!msg.get_error())
             {
                 // It's an actual message. Get the payload and print it to stdout
-
                 return msg.get_payload();
-                // j_message = json::parse((string)msg.get_payload());
-                // if (j_message[0].is_object())
-                // {
-                //     // cout << "Message received! Timestamp: " << j_message[0].at("arrivetimestamp_producer").dump() << endl;
-                //     return j_message;
-                // }
-                // else
-                // {
-                //     cout << "Invalid message format!" << endl;
-                // }
-
-                // cout << "Payload reseived! Timestamp: " <<  << endl;
             }
             else if (!msg.is_eof())
             {
@@ -95,6 +82,7 @@ void RabbitMQProducer::amqpConnect()
             // this->connection->DeclareExchange(this->svdata_exchange_name, Channel::EXCHANGE_TYPE_TOPIC);
             this->connection->DeclareExchange(this->svdata_exchange_name, Channel::EXCHANGE_TYPE_DIRECT);
             cout << "Conexão com RabbitMQ realizada com sucesso." << endl;
+            break;
         }
         catch (exception &e)
         {
@@ -135,6 +123,7 @@ void RabbitMQConsumer::amqpConnect()
             this->consumer_tag = this->connection->BasicConsume(this->queue_name, "");
             // this->connection->DeclareExchange(this->svdata_exchange_name, Channel::EXCHANGE_TYPE_DIRECT);
             cout << "Conexão com RabbitMQ realizada com sucesso." << endl;
+            break;
         }
         catch (exception &e)
         {
