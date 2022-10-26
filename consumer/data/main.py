@@ -10,6 +10,19 @@ import numpy as np
 DATA_DIR = Path(__file__).parent
 
 
+def plot_time(time: list):
+
+    packets = list(range(len(time)))
+    color = (0, 0.5, 0)
+    kafka_color = (0.5, 0, 0)
+    plt.scatter(packets, time, color=color, alpha=0.5)
+    plt.legend(["Times"])
+    plt.xlabel("Packet")
+    plt.ylim(0)
+    plt.ylabel("Time (us)")
+    plt.savefig(DATA_DIR / "figure.png")
+    plt.show()
+
 def main():
     # print(matplotlib.get_backend())
 
@@ -29,9 +42,16 @@ def main():
                 rabbitmq_times.append(times)
 
     kafka_averages = np.uint([times.mean() for times in kafka_times])
+    kafka_worst = kafka_averages.argmax()
+    kafka_best = kafka_averages.argmin()
+    plot_time(kafka_times[kafka_best])
+    
     rabbitmq_averages = np.uint([times.mean() for times in rabbitmq_times])
     rabbitmq_worst = rabbitmq_averages.argmax()
     rabbitmq_best = rabbitmq_averages.argmin()
+
+    plot_time(rabbitmq_times[rabbitmq_best])
+    return
 
     # packets = list(range(len(times)))
     # color = (0, random(), 0)
