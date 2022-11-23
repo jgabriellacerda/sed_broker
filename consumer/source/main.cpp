@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 #include <functional>
+#include <cstdlib>
 
 #include <json.hpp>
 #include <broker.h>
@@ -17,8 +18,12 @@ using cppkafka::Consumer;
 using cppkafka::Message;
 using cppkafka::TopicPartitionList;
 
+
+
 int main(int argc, char **argv)
 {
+
+  long int container_id = rand();
 
   // Consumer c("rabbitmq",5672,"dam","password","gabriela");
 
@@ -35,7 +40,7 @@ int main(int argc, char **argv)
   // KafkaConsumer broker_consumer(config, topic);
   RabbitMQConsumer broker_consumer("rabbitmq", 5672, "dam", "password", "gabriela");
 
-  MessageConsumer msg_consumer(broker_consumer);
+  MessageConsumer msg_consumer(broker_consumer, container_id);
 
   msg_consumer.dataConsumer();
 

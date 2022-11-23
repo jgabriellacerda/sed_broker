@@ -120,7 +120,7 @@ void RabbitMQConsumer::amqpConnect()
             // this->connection->DeclareExchange(this->svdata_exchange_name, Channel::EXCHANGE_TYPE_TOPIC);
             this->connection->DeclareQueue(this->queue_name, false, false, false, true);
             this->connection->BindQueue(this->queue_name, "process_bus_data", "sampled_values");
-            this->consumer_tag = this->connection->BasicConsume(this->queue_name, "");
+            this->consumer_tag = this->connection->BasicConsume(this->queue_name, "", true, true, false);
             // this->connection->DeclareExchange(this->svdata_exchange_name, Channel::EXCHANGE_TYPE_DIRECT);
             cout << "Conexão com RabbitMQ realizada com sucesso." << endl;
             break;

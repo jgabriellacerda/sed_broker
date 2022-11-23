@@ -1,5 +1,5 @@
 
-from os import listdir
+import os
 from pathlib import Path
 from pprint import pprint
 import matplotlib.pyplot as plt
@@ -25,7 +25,7 @@ def plot_average(kafka_averages: np.ndarray, rabbitmq_averages: np.ndarray):
              np.ones((len(packets))), color=kafka_color)
     plt.legend(["RabbitMQ", "Média RabbitMQ", "Kafka", "Média Kafka"])
     plt.xlabel("Teste")
-    plt.ylim(0)
+    plt.ylim(0, 4000)
     plt.ylabel("Tempo (us)")
     plt.savefig(DATA_DIR / "compare_evarages.png")
     plt.show()
@@ -48,13 +48,17 @@ def plot_time(time: list, broker_type: str):
 def main():
     # print(matplotlib.get_backend())
 
+    dir = 'vostro'
+
     kafka_times: list[np.uint] = []
     rabbitmq_times: list[np.uint] = []
 
-    times_files = listdir(DATA_DIR / 'times_database')
+    path = DATA_DIR / 'times_database' / dir
+    times_files = (file for file in os.listdir(path)
+                   if os.path.isfile(os.path.join(path, file)))
     for file_name in times_files:
 
-        with open(DATA_DIR / 'times_database' / file_name, encoding='utf-8') as file:
+        with open(path / file_name, encoding='utf-8') as file:
             lines = file.readlines()
             times = np.array([int(line.rstrip()) for line in lines])
             times = np.uint(times)
@@ -68,11 +72,12 @@ def main():
     kafka_best = kafka_averages.argmin()
     # plot_time(kafka_times[kafka_best], "kafka")
 
-    rabbitmq_averages = np.uint([times.mean() for times in rabbitmq_times])
+    rabbitmq_averages = np.uint(
+        [times.mean() for times in rabbitmq_times if times.mean() < 100000])
     rabbitmq_worst = rabbitmq_averages.argmax()
     rabbitmq_best = rabbitmq_averages.argmin()
 
-    # plot_time(rabbitmq_times[rabbitmq_best], "rabbitqm")
+    # plot_time(rabbitmq_times[rabbitmq_worst], "rabbitqm")
     plot_average(kafka_averages, rabbitmq_averages)
     return
 

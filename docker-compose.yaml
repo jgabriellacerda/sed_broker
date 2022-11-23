@@ -6,7 +6,7 @@ networks:
   process_bus:
     driver: macvlan
     driver_opts:
-      parent: wlp1s0
+      parent: eth0
   station_bus:
     driver: bridge
 

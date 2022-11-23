@@ -15,7 +15,10 @@ using namespace std;
 // using namespace AmqpClient;
 using json = nlohmann::json;
 
-MessageConsumer::MessageConsumer(BrokerConsumer &consumer) : consumer(consumer) {}
+MessageConsumer::MessageConsumer(BrokerConsumer &consumer, long int id) : consumer(consumer) 
+{
+  this->id = id;
+}
 
 // consumir dados da fila
 void MessageConsumer::dataConsumer()
@@ -67,7 +70,8 @@ void MessageConsumer::dataConsumer()
       else if (write_file)
       {
         cout << "Writing file..." << endl;
-        times_file.open("data/times_database/" + this->consumer.broker_name + "_times_" + to_string(consumertimestamp) + ".txt");
+        string container_id = to_string(this->id);
+        times_file.open("data/times_database/" + this->consumer.broker_name + "_" + container_id + "_times_" + to_string(consumertimestamp) + ".txt");
         for (int p = 0; p < BUFFERSIZE; p++)
         {
           times_file << times_buffer[p] << endl;

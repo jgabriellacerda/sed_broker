@@ -18,30 +18,16 @@ class MessageConsumer
 {
 
 protected:
-  // AmqpClient::Channel::ptr_t connection;
-  // string amqp_host;
-  // int amqp_port;
-  // string amqp_username;
-  // string amqp_password;
-  // string queue_name;
-  // string consumer_tag;
+  long int id;
   long consumertimestamp;
   json message_json;
   SVData data;
   string message_payload;
-
   BrokerConsumer &consumer;
-
-  // string svdata_exchange_name;
-  // string routing_key;
 public:
-  MessageConsumer(BrokerConsumer &consumer);
-  // MessageConsumer(string host, int port, string username, string password, string queue_name);
-  // void setAmqpParameters(string host, int port, string username, string password, string queue_name);
-  // void amqpConnect();
+  MessageConsumer(BrokerConsumer &consumer, long int id);
   void dataConsumer();
   void from_json(const json &j, SVData &p);
-  // void to_json(json& j, const SVData& p);
 };
 
 #endif

@@ -6,7 +6,7 @@ networks:
   process_bus:
     driver: macvlan
     driver_opts:
-      parent: wlp1s0
+      parent: eth0
   station_bus:
     driver: bridge
 
@@ -42,12 +42,28 @@ services:
     depends_on:
       - rabbitmq
 
-  thirdlayer:
-    container_name: thirdlayer
+  thirdlayer1:
+    container_name: thirdlayer1
     build:
-      context: ./consumer
+      context: ./thirdlayer1
     volumes:
-      - "./consumer/:/consumer_module"
+      - "./consumer:/consumer_module/"
+      - "./libs:/consumer_module/libs"
+    networks:
+      - station_bus
+      - kafka-net
+    restart: unless-stopped
+    privileged: TRUE
+    depends_on:
+      - rabbitmq
+      - cm
+    
+  thirdlayer2:
+    container_name: thirdlayer2
+    build:
+      context: ./thirdlayer2
+    volumes:
+      - "./consumer:/consumer_module/"
       - "./libs:/consumer_module/libs"
     networks:
       - station_bus
