@@ -20,5 +20,10 @@ RUN wget https://github.com/nlohmann/json/releases/download/v3.6.1/json.hpp
 
 WORKDIR /consumer_module
 COPY ./entrypoint.sh /consumer_module
+COPY ./source /consumer_module/source
+COPY ./header /consumer_module/header
+RUN mkdir /consumer_module/bin
+RUN mkdir /consumer_module/data
+RUN mkdir /consumer_module/data/times_database
 RUN chmod +x /consumer_module/entrypoint.sh
 CMD  ./entrypoint.sh

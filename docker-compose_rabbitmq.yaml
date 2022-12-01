@@ -44,11 +44,13 @@ services:
 
   thirdlayer1:
     container_name: thirdlayer1
-    build:
-      context: ./thirdlayer1
+    # build:
+    #   context: ./thirdlayer1
+    image: my-gcc-app
     volumes:
-      - "./consumer:/consumer_module/"
+      # - "./consumer:/consumer_module/"
       - "./libs:/consumer_module/libs"
+      - "./thirdlayer1/data:/consumer_module/data"
     networks:
       - station_bus
       - kafka-net
@@ -60,11 +62,13 @@ services:
     
   thirdlayer2:
     container_name: thirdlayer2
-    build:
-      context: ./thirdlayer2
+    # build:
+    #   context: ./thirdlayer2
+    image: my-gcc-app
     volumes:
-      - "./consumer:/consumer_module/"
+      # - "./consumer:/consumer_module/"
       - "./libs:/consumer_module/libs"
+      - "./thirdlayer2/data:/consumer_module/data"
     networks:
       - station_bus
       - kafka-net
