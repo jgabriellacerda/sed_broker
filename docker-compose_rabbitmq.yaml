@@ -42,15 +42,15 @@ services:
     depends_on:
       - rabbitmq
 
-  thirdlayer1:
-    container_name: thirdlayer1
+  rabbitmq-consumer1:
+    container_name: rabbitmq-consumer1
     # build:
     #   context: ./thirdlayer1
-    image: my-gcc-app
+    image: rabbitmq-gcc-consumer
     volumes:
       # - "./consumer:/consumer_module/"
       - "./libs:/consumer_module/libs"
-      - "./thirdlayer1/data:/consumer_module/data"
+      - "./rabbitmq_data/data:/consumer_module/data"
     networks:
       - station_bus
       - kafka-net
@@ -60,20 +60,20 @@ services:
       - rabbitmq
       - cm
     
-  thirdlayer2:
-    container_name: thirdlayer2
-    # build:
-    #   context: ./thirdlayer2
-    image: my-gcc-app
-    volumes:
-      # - "./consumer:/consumer_module/"
-      - "./libs:/consumer_module/libs"
-      - "./thirdlayer2/data:/consumer_module/data"
-    networks:
-      - station_bus
-      - kafka-net
-    restart: unless-stopped
-    privileged: TRUE
-    depends_on:
-      - rabbitmq
-      - cm
+  # rabbitmq-consumer2:
+  #   container_name: rabbitmq-consumer2
+  #   # build:
+  #   #   context: ./thirdlayer2
+  #   image: rabbitmq-gcc-consumer
+  #   volumes:
+  #     # - "./consumer:/consumer_module/"
+  #     - "./libs:/consumer_module/libs"
+  #     - "./thirdlayer2/data:/consumer_module/data"
+  #   networks:
+  #     - station_bus
+  #     - kafka-net
+  #   restart: unless-stopped
+  #   privileged: TRUE
+  #   depends_on:
+  #     - rabbitmq
+  #     - cm

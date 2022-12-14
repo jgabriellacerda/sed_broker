@@ -60,13 +60,15 @@ services:
     depends_on:
       - kafka-server1
 
-  thirdlayer:
-    container_name: thirdlayer
-    build:
-      context: ./consumer
+  kafka-consumer1:
+    container_name: kafka-consumer1
+    # build:
+    #   context: ./thirdlayer1
+    image: kafka-gcc-consumer
     volumes:
-      - "./consumer/:/consumer_module"
+      # - "./consumer:/consumer_module/"
       - "./libs:/consumer_module/libs"
+      - "./kafka_data/data:/consumer_module/data"
     networks:
       - station_bus
       - kafka-net
@@ -75,3 +77,21 @@ services:
     depends_on:
       - kafka-server1
       - cm
+    
+  # thirdlayer2:
+  #   container_name: thirdlayer2
+  #   # build:
+  #   #   context: ./thirdlayer2
+  #   image: kafka-gcc-consumer
+  #   volumes:
+  #     # - "./consumer:/consumer_module/"
+  #     - "./libs:/consumer_module/libs"
+  #     - "./thirdlayer2/data:/consumer_module/data"
+  #   networks:
+  #     - station_bus
+  #     - kafka-net
+  #   restart: unless-stopped
+  #   privileged: TRUE
+  #   depends_on:
+  #     - kafka-server1
+  #     - cm

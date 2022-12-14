@@ -28,6 +28,7 @@ void MessageConsumer::dataConsumer()
   long times_buffer[BUFFERSIZE];
   // json j_message;
   int n = 0;
+  int test_number = 0;
 
   bool try_consume = true;
   int num_attempts = 20;
@@ -71,14 +72,15 @@ void MessageConsumer::dataConsumer()
       {
         cout << "Writing file..." << endl;
         string container_id = to_string(this->id);
-        times_file.open("data/times_database/" + this->consumer.broker_name + "_" + container_id + "_times_" + to_string(consumertimestamp) + ".txt");
+        times_file.open("data/" + this->consumer.broker_name + "_" + container_id + "_times_" + to_string(consumertimestamp) + ".txt");
+        // times_file.open("data/teste");
         for (int p = 0; p < BUFFERSIZE; p++)
         {
           times_file << times_buffer[p] << endl;
           // cout << times_buffer[p] << endl;
         }
 
-        cout << "FIM" << endl;
+        cout << "File saved! Test number: " << ++test_number << endl;
         times_file.close();
 
         write_buffer = true;
@@ -115,7 +117,7 @@ void MessageConsumer::dataConsumer()
     cout << times_buffer[p] << endl;
   }
 
-  cout << "\nFIM\n";
+  cout << "\End of consuming!\n";
   times_file.close();
 }
 

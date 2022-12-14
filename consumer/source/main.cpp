@@ -33,12 +33,15 @@ int main(int argc, char **argv)
   // Create a configuration and set the group.id and broker list fields
   Configuration config = {
       {"metadata.broker.list", "kafka-server1:9092"},
-      {"group.id", "foo"}};
+      {"group.id", "foo"},
+      // {"queue.buffering.max.ms", 0},
+      // {"fetch.wait.max.ms", 0}
+      };
 
   string topic = "my_topic";
 
-  // KafkaConsumer broker_consumer(config, topic);
-  RabbitMQConsumer broker_consumer("rabbitmq", 5672, "dam", "password", "gabriela");
+  KafkaConsumer broker_consumer(config, topic);
+  // RabbitMQConsumer broker_consumer("rabbitmq", 5672, "dam", "password", "gabriela");
 
   MessageConsumer msg_consumer(broker_consumer, container_id);
 
