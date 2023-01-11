@@ -2,6 +2,7 @@
 import os
 from pathlib import Path
 from pprint import pprint
+from typing import List, Optional
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -30,29 +31,35 @@ def plot_average(kafka_averages: np.ndarray, rabbitmq_averages: np.ndarray,
     plt.ylim(0, 4000)
     plt.ylabel("Tempo (us)")
     plt.title(title)
-    plt.savefig(DATA_DIR / f"compare_evarages_{test_type}.png")
+    plt.savefig(DATA_DIR / f"compare_avgs_{test_type}.png")
     plt.show()
 
 
-def plot_time(time: list, broker_type: str):
+def plot_time(time: np.uint, filename: str):
 
+    ylim = time.mean()*2
     packets = list(range(len(time)))
     color = (0, 0.5, 0)
-    kafka_color = (0.5, 0, 0)
-    plt.scatter(packets, time, color=color, alpha=0.5)
+    plt.scatter(packets, time, color=color, alpha=0.3)
+    plt.plot(packets, time.mean() *
+             np.ones((len(packets))), color=color)
     plt.legend(["Times"])
     plt.xlabel("Packet")
-    plt.ylim(0)
+    plt.ylim(0, ylim)
     plt.ylabel("Time (us)")
-    plt.savefig(DATA_DIR / f"best_time_{broker_type}.png")
+    plt.savefig(DATA_DIR / f"{filename}.png")
     plt.show()
 
 
-def load_data(dir):
+def load_data(data_dir, startswith: Optional[str] = None) -> List[np.uint]:
 
-    path = DATA_DIR / 'times_database' / dir
-    times_files = (file for file in os.listdir(path)
-                   if os.path.isfile(os.path.join(path, file)))
+    path = DATA_DIR / 'times_database' / data_dir
+    times_files = [file for file in os.listdir(path)
+                   if os.path.isfile(os.path.join(path, file))]
+
+    if startswith:
+        times_files = [
+            file for file in times_files if file.startswith(startswith)]
 
     times_list = []
 
@@ -67,11 +74,9 @@ def load_data(dir):
     return times_list
 
 
-def main():
-    # print(matplotlib.get_backend())
-
-    test_type = '1consumer'
-    kafka_config = 'lowlatency'
+def compare_kafka_with_rabbitmq():
+    test_type = '2consumer'
+    kafka_config = 'low'
 
     kafka_dir = f'vostro/kafka_{test_type}_{kafka_config}'
     rabbitmq_dir = f'vostro/rabbitmq_{test_type}'
@@ -97,15 +102,39 @@ def main():
                  test_type, "Low Latency Kafka")
     return
 
-    # packets = list(range(len(times)))
-    # color = (0, random(), 0)
-    # plt.scatter(packets, rabbitmq_times[rabbitmq_best], color=color, alpha=0.5)
 
-    # packets = list(range(len(times)))
-    # color = (0, random(), 0)
-    # plt.scatter(packets, rabbitmq_times[rabbitmq_worst], color=color, alpha=0.5)
+def plot_single_time():
 
-    # plt.legend(["Best", "Worst"])
+    img_dir = 'vostro/kafka_2consumer_low'
+
+    consumer1_times: list[np.uint] = load_data(
+        img_dir, 'kafka_consumer_consumer1')
+    consumer2_times: list[np.uint] = load_data(
+        img_dir, 'kafka_consumer_consumer2')
+
+    consumer1_averages = np.uint([times.mean() for times in consumer1_times])
+    consumer1_worst = consumer1_averages.argmax()
+    consumer1_best = consumer1_averages.argmin()
+
+    img_dir = f'vostro/kafka_1consumer_lowlatency'
+
+    kakfa_singleconsumer_times: list[np.uint] = load_data(
+        img_dir, 'kafka_consumer')
+    kafkasingle_averages: List[np.uint] = [times.mean()
+                                           for times in kakfa_singleconsumer_times]
+    kafkasingle_avgs_array = np.uint(kafkasingle_averages)
+    kafkasingle_worst = kafkasingle_avgs_array.argmax()
+    kafkasingle_best = kafkasingle_avgs_array.argmin()
+
+    # plot_time(consumer1_times[consumer1_worst], "kafka_2consumer_worst")
+    # plot_time(consumer1_times[consumer1_best], "kafka_2consumer_best")
+    plot_time(
+        kakfa_singleconsumer_times[kafkasingle_best], "kafka_1consumer_best")
+
+
+def main():
+    # plot_single_time()
+    compare_kafka_with_rabbitmq()
 
 
 if __name__ == "__main__":

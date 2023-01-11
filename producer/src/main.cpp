@@ -16,17 +16,17 @@ int main(int argc, char **argv)
       {"metadata.broker.list", "kafka-server1:9092"},
       // {"queue.buffering.max.ms", 0},
       // {"fetch.wait.max.ms", 0}
-      };
+  };
 
-  KafkaProducer broker_producer(config);
-  // RabbitMQProducer broker_producer("rabbitmq", 5672, "dam", "password", "process_bus_data", "sampled_values");
+  // KafkaProducer broker_producer(config);
+  RabbitMQProducer broker_producer("rabbitmq", 5672, "dam", "password", "process_bus_data", "sampled_values");
 
   Sniffer s("SVRecording.pcap", false, broker_producer);
 
   int counter = 0;
   while (true)
   {
-     cout << "\nSending packets..." << endl;
+    cout << "\nSending packets..." << endl;
     counter++;
     s.start();
     cout << "\nPackets sent! Test number: " + to_string(counter) + ".\n";
