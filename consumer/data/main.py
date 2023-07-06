@@ -1,16 +1,51 @@
 
+from datetime import datetime
 import os
 from pathlib import Path
 from pprint import pprint
 from typing import List, Optional
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 
-DATA_DIR = Path(__file__).parent
+IMAGE_DIR = Path(__file__).parent / "images"
+DATA_DIR = Path(__file__).parent / "times_database" / "vostro"
 
 
-def plot_average(kafka_averages: np.ndarray, rabbitmq_averages: np.ndarray,
-                 test_type: str, title: str):
+def convert_data_to_csv(test_type: str = "rabbitmq_2consumer"):
+    test_path = DATA_DIR / test_type
+    files = test_path.glob("*.txt")
+    data = {"test": [], "packet": [], "time": []}
+    for test, file in enumerate(files):
+        times = file.read_text().split("\n")
+        for packet, time in enumerate(times):
+            if time:
+                data["test"].append(test)
+                data["packet"].append(packet)
+                data["time"].append(int(time))
+    now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    pd.DataFrame(data).to_csv(test_path / f"results_{now}.csv")
+
+
+def plot_hist(
+    consumers: int,
+    broker: str,
+    test_type: str = "rabbitmq_2consumer"
+):
+    file = list((DATA_DIR / test_type).glob("*.csv"))[0]
+    df = pd.read_csv(file)
+    time_limit = df["time"].mean() + df["time"].std()
+    times = df['time']
+    times = times[times < time_limit]
+    plt.clf()
+    ax = times.hist(bins=200)
+    plt.xlabel("Tempo (us)")
+    plt.legend([f"{consumers} consumidores"])
+    plt.title(broker.capitalize())
+    plt.savefig(IMAGE_DIR / f"times_hist_{broker}_{consumers}_consumer.png")
+
+
+def plot_average(kafka_averages: np.ndarray, rabbitmq_averages: np.ndarray, test_type: str, title: str):
 
     max_tests = min([len(rabbitmq_averages), len(kafka_averages)])
     max_tests = max_tests if max_tests < 100 else 100
@@ -31,7 +66,7 @@ def plot_average(kafka_averages: np.ndarray, rabbitmq_averages: np.ndarray,
     plt.ylim(0, 4000)
     plt.ylabel("Tempo (us)")
     plt.title(title)
-    plt.savefig(DATA_DIR / f"compare_avgs_{test_type}.png")
+    plt.savefig(IMAGE_DIR / f"compare_avgs_{test_type}.png")
     plt.show()
 
 
@@ -51,41 +86,32 @@ def plot_time(time: np.uint, filename: str):
     plt.show()
 
 
-def load_data(data_dir, startswith: Optional[str] = None) -> List[np.uint]:
+def load_data(test_type: Path) -> List[np.uint]:
 
-    path = DATA_DIR / 'times_database' / data_dir
-    times_files = [file for file in os.listdir(path)
-                   if os.path.isfile(os.path.join(path, file))]
+    path = DATA_DIR / test_type
+    times_file = list(path.glob("*.csv"))[0]
 
-    if startswith:
-        times_files = [
-            file for file in times_files if file.startswith(startswith)]
+    time_lists = []
+    df = pd.read_csv(times_file)
+    for group, data in df.groupby("test"):
+        time_lists.append(np.uint(list(data['time'])))
 
-    times_list = []
-
-    for file_name in times_files:
-
-        with open(path / file_name, encoding='utf-8') as file:
-            lines = file.readlines()
-            times = np.array([int(line.rstrip()) for line in lines])
-            times = np.uint(times)
-            times_list.append(times)
-
-    return times_list
+    return time_lists
 
 
 def compare_kafka_with_rabbitmq():
     test_type = '2consumer'
-    kafka_config = 'low'
+    kafka_config = 'lowlatency'
+    # kafka_config = 'default'
 
-    kafka_dir = f'vostro/kafka_{test_type}_{kafka_config}'
-    rabbitmq_dir = f'vostro/rabbitmq_{test_type}'
+    kafka_test = f'kafka_{test_type}_{kafka_config}'
+    rabbitmq_test = f'rabbitmq_{test_type}_default'
 
     kafka_times: list[np.uint] = []
     rabbitmq_times: list[np.uint] = []
 
-    kafka_times = load_data(kafka_dir)
-    rabbitmq_times = load_data(rabbitmq_dir)
+    kafka_times = load_data(kafka_test)
+    rabbitmq_times = load_data(rabbitmq_test)
 
     kafka_averages = np.uint([times.mean() for times in kafka_times])
     kafka_worst = kafka_averages.argmax()
@@ -134,6 +160,18 @@ def plot_single_time():
 
 def main():
     # plot_single_time()
+    # test_types = [
+    #     ("kafka", 1, "default"),
+    #     ("kafka", 1, "lowlatency"),
+    #     ("kafka", 2, "lowlatency"),
+    #     ("rabbitmq", 1, "default"),
+    #     ("rabbitmq", 2, "default"),
+    # ]
+    # for test_type in test_types:
+    #     broker, consumers, config = test_type
+    #     test_type = f"{broker}_{consumers}consumer_{config}"
+    #     convert_data_to_csv(test_type)
+    #     plot_hist(consumers, broker, test_type)
     compare_kafka_with_rabbitmq()
 
 

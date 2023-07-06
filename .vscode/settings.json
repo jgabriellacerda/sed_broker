@@ -1,6 +1,7 @@
 {
     "python.analysis.typeCheckingMode": "basic",
     "files.associations": {
+        "*.log": "ansi",
         "iostream": "cpp",
         "array": "cpp",
         "atomic": "cpp",
@@ -56,6 +57,11 @@
         "streambuf": "cpp",
         "thread": "cpp",
         "typeinfo": "cpp",
-        "valarray": "cpp"
+        "valarray": "cpp",
+        "cinttypes": "cpp",
+        "filtroiir.h": "c",
+        "stdio.h": "c",
+        "dft.h": "c",
+        "filtrosg.h": "c"
     }
 }
