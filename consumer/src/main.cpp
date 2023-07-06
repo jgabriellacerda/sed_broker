@@ -42,8 +42,8 @@ int main(int argc, char **argv)
 
   string topic = "my_topic";
 
-  // KafkaConsumer broker_consumer(config, topic);
-  RabbitMQConsumer broker_consumer("rabbitmq", 5672, "dam", "password", "gabriela");
+  KafkaConsumer broker_consumer(config, topic);
+  // RabbitMQConsumer broker_consumer("rabbitmq", 5672, "dam", "password", "gabriela");
 
   MessageConsumer msg_consumer(broker_consumer, group_id);
 

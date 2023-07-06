@@ -48,6 +48,7 @@ void MessageConsumer::dataConsumer()
       this->message_json = json::parse(this->message_payload);
 
       from_json(this->message_json, this->data);
+      // cout << this->data.Phsmeas[0] << endl;
 
       delta_time = (this->consumertimestamp - data.arrivetimestamp_producer);
       // long diff1 = (this->consumertimestamp - data.arrivetimestampfirst);
@@ -126,6 +127,11 @@ void MessageConsumer::from_json(const json &j, SVData &p)
   j[0].at("arrivetimestamp_producer").get_to(p.arrivetimestamp_producer);
   // j[2].at("arrivetimestamp").get_to(p.arrivetimestamplast);
   // j[0].at("timestamp").get_to(p.timestamp);
+
+  // std::vector<double> samples_0;
+  // j[0].at("samples_0").get_to(samples_0);
+  // std::copy(samples_0.begin(), samples_0.end(), p.Phsmeas[0]);
+
   j[0].at("status").get_to(p.status);
   j[0].at("sv_id").get_to(p.sv_id);
 }
