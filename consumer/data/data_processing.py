@@ -17,7 +17,7 @@ def convert_data_to_csv(
     test_type: str = "rabbitmq_2consumer",
     source_path: Path = DATA_DIR / "rabbitmq_2consumer",
     dest_path: Path = DATA_DIR / "rabbitmq_2consumer",
-    ):
+):
     files = source_path.glob("*.txt")
     data = {"test": [], "packet": [], "time": []}
     for test, file in enumerate(files):
@@ -33,11 +33,37 @@ def convert_data_to_csv(
     pd.DataFrame(data).to_csv(dest_path / f"results_{now}.csv")
 
 
+def plot_hists(
+    test_configs: List[tuple],
+    legend: List[str],
+    colors: List[tuple],
+    time_limit=None,
+):
+    for i, test_config in enumerate(test_configs):
+        broker, consumers, config = test_config
+        test_str = f"{broker}_{consumers}consumer_{config}"
+        file = sorted(list((DATA_DIR / test_str).glob("**/*.csv")), key=lambda p: p.stem, reverse=True)[0]
+        df = pd.read_csv(file)
+        time_limit = df["time"].mean() + df["time"].std() if time_limit is None else time_limit
+        times = df['time']
+        times = times[times < time_limit]
+        # plt.clf()
+        # ax = times.hist(bins=200)
+        sns.kdeplot(times, fill=True, color=colors[i])
+
+    plt.xlabel("Tempo (us)")
+    plt.ylabel("Densidade")
+    plt.legend(legend)
+    # plt.title(broker.capitalize())
+    plt.xlim((0, time_limit))
+    plt.savefig(IMAGE_DIR / f"times_hists.png")
+
+
 def plot_hist(
     consumers: int,
     broker: str,
     config: str,
-    time_limit = None,
+    time_limit=None,
 ):
     test_str = f"{broker}_{consumers}consumer_{config}"
     file = sorted(list((DATA_DIR / test_str).glob("**/*.csv")), key=lambda p: p.stem, reverse=True)[0]
@@ -55,28 +81,31 @@ def plot_hist(
     plt.savefig(IMAGE_DIR / f"times_hist_{test_str}.png")
 
 
-def plot_average(kafka_averages: np.ndarray, rabbitmq_averages: np.ndarray, test_type: str, title: str):
+def plot_average(
+    kafka_averages: np.ndarray,
+    rabbitmq_averages: np.ndarray,
+    test_type: str,
+    title: str,
+    rmq_color=(0, 0.5, 0),
+    kafka_color=(0.5, 0, 0)
+):
 
     max_tests = min([len(rabbitmq_averages), len(kafka_averages)])
-    max_tests = max_tests if max_tests < 100 else 100
+    max_tests = min(max_tests, 100)
     rabbitmq_averages = rabbitmq_averages[:max_tests]
     kafka_averages = kafka_averages[:max_tests]
 
     packets = list(range(max_tests))
-    rmq_color = (0, 0.5, 0)
-    kafka_color = (0.5, 0, 0)
     plt.clf()
     plt.scatter(packets, rabbitmq_averages, color=rmq_color, alpha=0.5)
-    plt.plot(packets, rabbitmq_averages.mean() *
-             np.ones((len(packets))), color=rmq_color)
+    plt.plot(packets, rabbitmq_averages.mean() * np.ones((len(packets))), color=rmq_color)
     plt.scatter(packets, kafka_averages, color=kafka_color, alpha=0.5)
-    plt.plot(packets, kafka_averages.mean() *
-             np.ones((len(packets))), color=kafka_color)
+    plt.plot(packets, kafka_averages.mean() * np.ones((len(packets))), color=kafka_color)
     plt.legend(["RabbitMQ", "Média RabbitMQ", "Kafka", "Média Kafka"])
     plt.xlabel("Teste")
     plt.ylim(0, 2000)
     plt.ylabel("Tempo (us)")
-    plt.title(title)                                   
+    plt.title(title)
     plt.savefig(IMAGE_DIR / f"compare_avgs_{test_type}.png")
     # plt.show()
 
@@ -110,8 +139,11 @@ def load_data(test_type: str) -> List[np.uint]:
     return time_lists
 
 
-def compare_kafka_with_rabbitmq(test_type: str = '2consumer', kafka_config: str = 'lowlatency'):
-
+def compare_kafka_with_rabbitmq(
+    test_type: str = '2consumer',
+    kafka_config: str = 'lowlatency',
+    plot=False
+):
 
     kafka_test = f'kafka_{test_type}_{kafka_config}'
     rabbitmq_test = f'rabbitmq_{test_type}_default'
@@ -134,10 +166,18 @@ def compare_kafka_with_rabbitmq(test_type: str = '2consumer', kafka_config: str 
     kafka_averages = remove_outliers(kafka_averages)
     rabbitmq_averages = remove_outliers(rabbitmq_averages)
 
-    # plot_time(rabbitmq_times[rabbitmq_worst], "rabbitqm")
-    title = "Low Latency Kafka" if kafka_config == "lowlatency" else "Default Kafka"
-    plot_average(kafka_averages, rabbitmq_averages, f"{test_type}_{kafka_config}", title)
-    return
+    print("-"*20)
+    print(test_type)
+    print(f"Kafka {kafka_config}: {kafka_averages.mean()}")
+    print(f"RabbitMQ: {rabbitmq_averages.mean()}")
+
+    if plot:
+        # plot_time(rabbitmq_times[rabbitmq_worst], "rabbitqm")
+        title = "Low Latency Kafka" if kafka_config == "lowlatency" else "Default Kafka"
+        kafka_color = (0.5, 0, 0) if kafka_config == "default" else (0.8, 0.3, 0)
+        plot_average(kafka_averages, rabbitmq_averages, f"{test_type}_{kafka_config}", title, kafka_color=kafka_color)
+
+    return rabbitmq_averages.mean(), kafka_averages.mean()
 
 
 def remove_outliers(values: np.ndarray) -> np.ndarray:
@@ -145,6 +185,7 @@ def remove_outliers(values: np.ndarray) -> np.ndarray:
     high_q = np.quantile(values, 0.95)
 
     return np.array([v for v in values if v > low_q and v < high_q])
+
 
 def plot_single_time():
 

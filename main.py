@@ -1,10 +1,11 @@
 
 from pathlib import Path
-from consumer.data.data_processing import compare_kafka_with_rabbitmq, convert_data_to_csv, plot_hist
+from consumer.data.data_processing import compare_kafka_with_rabbitmq, convert_data_to_csv, plot_hist, plot_hists
+import pandas as pd
 
 
 def save_data(test_type: tuple):
-    
+
     broker, consumers, config = test_type
     test_str = f"{broker}_{consumers}consumer_{config}"
 
@@ -21,6 +22,7 @@ def save_data(test_type: tuple):
         dest_path.mkdir(parents=True, exist_ok=True)
         convert_data_to_csv(f"{broker}_{consumers}consumer_{config}", source_path, dest_path)
 
+
 def main():
     # test_type = ("kafka", 1, "default")
     # test_type = ("kafka", 1, "lowlatency")
@@ -31,6 +33,14 @@ def main():
     # save_data(test_type)
     # return
 
+    # plot_hists(
+    #     [("rabbitmq", 1, "default"), ("kafka", 1, "default"), ("kafka", 1, "lowlatency")],
+    #     # [("rabbitmq", 2, "default"),  ("kafka", 2, "default"), ("kafka", 2, "lowlatency")],
+    #     ["RabbitMQ", "Kafka padrão", "Kafka baixa latência"],
+    #     [(0, 0.5, 0), (0.5, 0, 0), (0.8, 0.3, 0)]
+    # )
+    # return
+
     test_types = [
         ("kafka", 1, "default"),
         ("kafka", 1, "lowlatency"),
@@ -39,13 +49,20 @@ def main():
         ("rabbitmq", 1, "default"),
         ("rabbitmq", 2, "default"),
     ]
+    times_dict = {"consumers": [], "kafka_config": [], "kafka_time": [], "rabbitmq_time": []}
     for test_type in test_types:
         broker, consumers, config = test_type
         test_str = f"{broker}_{consumers}consumer_{config}"
         print(test_str)
-        compare_kafka_with_rabbitmq(f"{consumers}consumer", config)
-        plot_hist(consumers, broker, config, 2000)
+        rmq_time, kafka_time = compare_kafka_with_rabbitmq(f"{consumers}consumer", config)
+        times_dict["consumers"].append(consumers)
+        times_dict["kafka_config"].append(config)
+        times_dict["rabbitmq_time"].append(rmq_time)
+        times_dict["kafka_time"].append(kafka_time)
+
+    pd.DataFrame(times_dict).to_csv("consumer/data/times.csv")
+    # plot_hist(consumers, broker, config, 2000)
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     main()
