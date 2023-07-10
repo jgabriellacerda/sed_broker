@@ -63,5 +63,9 @@
         "stdio.h": "c",
         "dft.h": "c",
         "filtrosg.h": "c"
-    }
+    },
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.autopep8"
+    },
+    "python.formatting.provider": "none"
 }

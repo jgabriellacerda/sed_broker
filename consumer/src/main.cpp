@@ -37,8 +37,9 @@ int main(int argc, char **argv)
   Configuration config = {
       {"metadata.broker.list", "kafka-server1:9092"},
       {"group.id", group_id},
-      {"queue.buffering.max.ms", 0},
-      {"fetch.wait.max.ms", 0}};
+      // {"queue.buffering.max.ms", 0},
+      // {"fetch.wait.max.ms", 0}
+      };
 
   string topic = "my_topic";
 
@@ -48,5 +49,5 @@ int main(int argc, char **argv)
   MessageConsumer msg_consumer(broker_consumer, group_id);
 
   msg_consumer.dataConsumer();
-
+  return 0;
 } // end of main

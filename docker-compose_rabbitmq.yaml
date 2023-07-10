@@ -62,22 +62,22 @@ services:
       - rabbitmq
       - cm
 
-  rabbitmq-consumer2:
-    container_name: rabbitmq-consumer2
-    # build:
-    #   context: ./thirdlayer2
-    image: rabbitmq-gcc-consumer
-    environment:
-      - CONSUMER_GROUP=consumer2
-    volumes:
-      # - "./consumer:/consumer_module/"
-      - "./libs:/consumer_module/libs"
-      - "./rabbitmq_data/consumer2/data:/consumer_module/data"
-    networks:
-      - station_bus
-      - kafka-net
-    restart: unless-stopped
-    privileged: TRUE
-    depends_on:
-      - rabbitmq
-      - cm
+  # rabbitmq-consumer2:
+  #   container_name: rabbitmq-consumer2
+  #   # build:
+  #   #   context: ./thirdlayer2
+  #   image: rabbitmq-gcc-consumer
+  #   environment:
+  #     - CONSUMER_GROUP=consumer2
+  #   volumes:
+  #     # - "./consumer:/consumer_module/"
+  #     - "./libs:/consumer_module/libs"
+  #     - "./rabbitmq_data/consumer2/data:/consumer_module/data"
+  #   networks:
+  #     - station_bus
+  #     - kafka-net
+  #   restart: unless-stopped
+  #   privileged: TRUE
+  #   depends_on:
+  #     - rabbitmq
+  #     - cm
