@@ -17,7 +17,6 @@ struct SVData
 	bool status;
 	long arrivetimestamp_producer;
 	long arrivetimestamp_consumer;
-	// long long timefirstlayer;
 };
 
 #endif

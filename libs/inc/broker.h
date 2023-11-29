@@ -7,8 +7,6 @@
 #include <thread>
 #include <iostream>
 
-// #include <datatypes.h>
-// #include <parameters.h>
 #include <json.hpp>
 #include <cppkafka/cppkafka.h>
 #include <SimpleAmqpClient/SimpleAmqpClient.h>
@@ -57,12 +55,9 @@ public:
   string amqp_password;
   string svdata_exchange_name;
   string routing_key;
-
   AmqpClient::Channel::ptr_t connection;
-
   void amqpConnect();
   void publish(string message);
-
   RabbitMQProducer(string host, int port, string username, string password, string svdata_exchange_name, string key);
 };
 
@@ -75,12 +70,19 @@ public:
   string amqp_password;
   string queue_name;
   string consumer_tag;
-
+  string svdata_exchange_name;
+  string routing_key;
   AmqpClient::Channel::ptr_t connection;
-
   void amqpConnect();
   string listen();
-  RabbitMQConsumer(string host, int port, string username, string password, string queue_name);
+  RabbitMQConsumer(
+      string host,
+      int port,
+      string username,
+      string password,
+      string queue_name,
+      string svdata_exchange_name,
+      string routing_key);
 };
 
 #endif

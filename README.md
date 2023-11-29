@@ -7,7 +7,7 @@ sudo service docker start
 - In ```consumer/src/main.cpp``` and ```producer/src/main.cpp``` change the object of the BrokerConsumer and BrokerProducer interfaces to the corresponding RabbitMQ implementations.
 - Build the consumer image.
 ```
-cd/consumer
+cd consumer
 sudo docker build -t rabbitmq-gcc-consumer .
 ```
 - Run the containers.
@@ -30,7 +30,7 @@ rm data/*
 - In ```consumer/src/main.cpp``` and ```producer/src/main.cpp``` change the object of the BrokerConsumer and BrokerProducer interfaces to the corresponding Kafka implementations.
 - Build the consumer image.
 ```
-cd/consumer
+cd consumer
 sudo docker build -t kafka-gcc-consumer .
 ```
 - Run the containers.

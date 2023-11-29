@@ -7,3 +7,6 @@ cppkafka-0.3.1/
 rust-consumer/target
 kafka_data/*
 rabbitmq_data/*
+librdkafka
+vcpkg
+SimpleAmqpClient-2.4.0

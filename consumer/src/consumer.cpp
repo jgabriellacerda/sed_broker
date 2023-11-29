@@ -26,35 +26,21 @@ void MessageConsumer::dataConsumer()
   std::ofstream times_file;
   long delta_time;
   long times_buffer[BUFFERSIZE];
-  // json j_message;
   int n = 0;
   int test_number = 0;
-
   bool try_consume = true;
   int num_attempts = 20;
   bool write_buffer = true;
   bool write_file = false;
-  // while (try_consume)
-  // {
   try
   {
     do
     {
-
       this->message_payload = this->consumer.listen();
-
-      // amostrar aqui!
       this->consumertimestamp = std::chrono::duration_cast<std::chrono::microseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
       this->message_json = json::parse(this->message_payload);
-
       from_json(this->message_json, this->data);
-      // cout << this->data.Phsmeas[0] << endl;
-
       delta_time = (this->consumertimestamp - data.arrivetimestamp_producer);
-      // long diff1 = (this->consumertimestamp - data.arrivetimestampfirst);
-      // long diff2= (this->consumertimestamp - data.arrivetimestamplast);
-
-      // cout<< data.arrivetimestamp << "   " << this->consumertimestamp<<endl;}
       if (write_buffer)
       {
         if (n < BUFFERSIZE)
@@ -73,16 +59,12 @@ void MessageConsumer::dataConsumer()
       {
         cout << "Writing file..." << endl;
         times_file.open("data/" + this->consumer.broker_name + "_" + this->group_id + "_times_" + to_string(consumertimestamp) + ".txt");
-        // times_file.open("data/teste");
         for (int p = 0; p < BUFFERSIZE; p++)
         {
           times_file << times_buffer[p] << endl;
-          // cout << times_buffer[p] << endl;
         }
-
         cout << "File saved! Test number: " << ++test_number << endl;
         times_file.close();
-
         write_buffer = true;
         write_file = false;
       }
@@ -90,10 +72,7 @@ void MessageConsumer::dataConsumer()
       {
         cout << delta_time << endl;
       }
-
-    }
-    // cout<< data.sv_id<< endl;}
-    while (try_consume);
+    } while (try_consume);
   }
   catch (exception &e)
   {
@@ -125,13 +104,6 @@ void MessageConsumer::dataConsumer()
 void MessageConsumer::from_json(const json &j, SVData &p)
 {
   j[0].at("arrivetimestamp_producer").get_to(p.arrivetimestamp_producer);
-  // j[2].at("arrivetimestamp").get_to(p.arrivetimestamplast);
-  // j[0].at("timestamp").get_to(p.timestamp);
-
-  // std::vector<double> samples_0;
-  // j[0].at("samples_0").get_to(samples_0);
-  // std::copy(samples_0.begin(), samples_0.end(), p.Phsmeas[0]);
-
   j[0].at("status").get_to(p.status);
   j[0].at("sv_id").get_to(p.sv_id);
 }

@@ -37,14 +37,13 @@ int main(int argc, char **argv)
   Configuration config = {
       {"metadata.broker.list", "kafka-server1:9092"},
       {"group.id", group_id},
-      // {"queue.buffering.max.ms", 0},
-      // {"fetch.wait.max.ms", 0}
-      };
+      {"fetch.wait.max.ms", 0}};
+  // {"queue.buffering.max.ms", 0},
 
   string topic = "my_topic";
 
   KafkaConsumer broker_consumer(config, topic);
-  // RabbitMQConsumer broker_consumer("rabbitmq", 5672, "dam", "password", "gabriela");
+  // RabbitMQConsumer broker_consumer("rabbitmq", 5672, "dam", "password", "gabriela", "process_bus_data", "sampled_values");
 
   MessageConsumer msg_consumer(broker_consumer, group_id);
 
